@@ -11,7 +11,7 @@ This is the Conarx Containers Grafana image, it provides the Grafana open source
 # Mirrors
 
 |  Provider  |  Repository                             |
-|------------|------------------------------------**---|
+|------------|-----------------------------------------|
 | DockerHub  | allworldit/grafana                      |
 | Conarx     | registry.conarx.tech/containers/grafana |
 
