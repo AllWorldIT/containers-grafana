@@ -151,9 +151,12 @@ RUN set -eux; \
 	make dist-backend-linux; \
 	# Install
 	install -dm755 "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
-	cp -r dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"
-	#install -dm755 "/build/grafana-root/usr/share/grafana/plugins/alexanderzobnin-zabbix-app"; \
-	#cp -r dist/* "/build/grafana-root/usr/share/grafana/plugins/alexanderzobnin-zabbix-app"
+	cp -r dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
+	#
+	# Cleanup
+	#
+	find /build/grafana-root/usr/local/share -name "*.test.*" -print0 | xargs -0 rm -v
+
 
 RUN set -eux; \
 	cd build/grafana-root; \
