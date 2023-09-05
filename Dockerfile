@@ -19,7 +19,7 @@
 # IN THE SOFTWARE.
 
 
-FROM registry.conarx.tech/containers/alpine/edge as builder
+FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
 ENV GRAFANA_VER=10.1.1
@@ -154,14 +154,14 @@ RUN set -eux; \
 
 
 
-FROM registry.conarx.tech/containers/alpine/edge
+FROM registry.conarx.tech/containers/postfix/edge
 
 
 ARG VERSION_INFO=
 
 LABEL org.opencontainers.image.authors   "Nigel Kukard <nkukard@conarx.tech>"
 LABEL org.opencontainers.image.version   "edge"
-LABEL org.opencontainers.image.base.name "registry.conarx.tech/containers/alpine/edge"
+LABEL org.opencontainers.image.base.name "registry.conarx.tech/containers/postfix/edge"
 
 
 # Copy in built binaries
