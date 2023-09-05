@@ -1,0 +1,15 @@
+diff --git a/public/app/features/admin/UpgradePage.tsx b/public/app/features/admin/UpgradePage.tsx
+index b6e7fc9..3a782ba 100644
+--- a/public/app/features/admin/UpgradePage.tsx
++++ b/public/app/features/admin/UpgradePage.tsx
+@@ -21,10 +21,6 @@ export function UpgradePage({ navModel }: Props) {
+     <Page navModel={navModel}>
+       <Page.Contents>
+         <ServerStats />
+-        <UpgradeInfo
+-          editionNotice="You are running the open-source version of Grafana.
+-        You have to install the Enterprise edition in order enable Enterprise features."
+-        />
+       </Page.Contents>
+     </Page>
+   );

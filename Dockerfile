@@ -26,6 +26,9 @@ ENV GRAFANA_VER=10.1.1
 ENV GRAFANA_ZABBIX_VER=4.4.1
 
 
+COPY patches /build/patches
+
+
 # Install libs we need
 RUN set -eux; \
 	true "Installing build dependencies"; \
@@ -57,6 +60,16 @@ RUN set -eux; \
 	tar -zxf "grafana-zabbix-${GRAFANA_ZABBIX_VER}.tar.gz"; \
 	# Clone mage which we need for grafana-zabbix
 	git clone --depth=1 https://github.com/magefile/mage
+
+
+# Patch
+RUN set -eux; \
+	cd build; \
+	true "Patching Grafana..."; \
+	cd "grafana-${GRAFANA_VER}"; \
+	patch -p1 < ../patches/grafana-10.1.0_remove-advertising.patch; \
+	patch -p1 < ../patches/grafana-10.1.0_remove-footer.patch; \
+	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch
 
 
 # Build and install Grafana
@@ -138,9 +151,12 @@ RUN set -eux; \
 	make dist-backend-linux; \
 	# Install
 	install -dm755 "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
-	cp -r dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"
-	#install -dm755 "/build/grafana-root/usr/share/grafana/plugins/alexanderzobnin-zabbix-app"; \
-	#cp -r dist/* "/build/grafana-root/usr/share/grafana/plugins/alexanderzobnin-zabbix-app"
+	cp -r dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
+	#
+	# Cleanup
+	#
+	find /build/grafana-root/usr/local/share -name "*.test.*" -print0 | xargs -0 rm -v
+
 
 RUN set -eux; \
 	cd build/grafana-root; \
