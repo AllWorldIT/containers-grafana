@@ -1,0 +1,34 @@
+diff --git a/public/app/features/datasources/state/buildCategories.ts b/public/app/features/datasources/state/buildCategories.ts
+index 68fa9f4..8b4e4a6 100644
+--- a/public/app/features/datasources/state/buildCategories.ts
++++ b/public/app/features/datasources/state/buildCategories.ts
+@@ -28,9 +28,12 @@ export function buildCategories(plugins: DataSourcePluginMeta[]): DataSourcePlug
+     const enterprisePlugin = enterprisePlugins.find((item) => item.id === plugin.id);
+     // Force category for enterprise plugins
+     if (plugin.enterprise || enterprisePlugin) {
++/*
+       plugin.category = 'enterprise';
+       plugin.unlicensed = !featureEnabled('enterprise.plugins');
+       plugin.info.links = enterprisePlugin?.info?.links || plugin.info.links;
++*/
++	  continue;
+     }
+
+     // Fix link name
+@@ -47,6 +50,7 @@ export function buildCategories(plugins: DataSourcePluginMeta[]): DataSourcePlug
+   }
+
+   for (const category of categories) {
++/*
+     // add phantom plugin
+     if (category.id === 'cloud') {
+       category.plugins.push(getGrafanaCloudPhantomPlugin());
+@@ -60,7 +64,7 @@ export function buildCategories(plugins: DataSourcePluginMeta[]): DataSourcePlug
+         }
+       }
+     }
+-
++*/
+     sortPlugins(category.plugins);
+   }
+
