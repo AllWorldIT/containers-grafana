@@ -155,8 +155,7 @@ RUN set -eux; \
 	#
 	# Cleanup
 	#
-	find /build/grafana-root/usr/local/share/grafana -name "*.test.*" -print0 | xargs -0 rm -v; \
-	find /build/grafana-root/usr/local/share/grafana/public -name "*.map" -print0 | xargs -0 rm -v
+	find /build/grafana-root/usr/local/share -name "*.test.*" -print0 | xargs -0 rm -v
 
 
 RUN set -eux; \
