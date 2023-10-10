@@ -23,7 +23,7 @@ FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
 ENV GRAFANA_VER=10.1.4
-ENV GRAFANA_ZABBIX_VER=4.4.1
+ENV GRAFANA_ZABBIX_VER=4.4.3
 
 
 COPY patches /build/patches
