@@ -23,7 +23,9 @@ FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
 ENV GRAFANA_VER=10.2.2
-ENV GRAFANA_ZABBIX_VER=4.4.3
+ENV GRAFANA_ZABBIX_VER=4.4.4
+ENV GO_VER=1.21.4
+ENV NODEJS_VER=18.18.1
 
 
 COPY patches /build/patches
@@ -37,18 +39,144 @@ RUN set -eux; \
 		build-base \
 		\
 		git \
-		go \
 		sqlite-dev \
-		wire-go \
-		nodejs \
-		yarn \
 		\
 		freetype \
 		fontconfig \
-		ghostscript-fonts
+		ghostscript-fonts \
+		\
+# For Go
+		go-bootstrap \
+		\
+# For NodeJS
+		ca-certificates \
+		brotli-dev c-ares-dev icu-dev linux-headers nghttp2-dev openssl-dev python3 py3-jinja2 samurai zlib-dev
+
+# Download Go package
+RUN set -eux; \
+	mkdir -p build; \
+	true "Download Go..."; \
+	cd build; \
+	wget "https://go.dev/dl/go${GO_VER}.src.tar.gz" -O "go-${GO_VER}.src.tar.gz"; \
+	tar -zxf "go-${GO_VER}.src.tar.gz"
+
+# Patch Go
+RUN set -eux; \
+	cd build; \
+	true "Patching Go..."; \
+	cd "go"; \
+	patch -p1 < ../patches/go-0001-cmd-link-prefer-musl-s-over-glibc-s-ld.so-during-dyn.patch; \
+	patch -p1 < ../patches/go-0002-misc-cgo-test-enable-setgid-tests-on-Alpine-Linux-ag.patch; \
+	patch -p1 < ../patches/go-0003-go.env-Don-t-switch-Go-toolchain-version-as-directed.patch
+
+# Build Go
+# ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
+RUN set -eux; \
+	cd build; \
+	cd "go/src"; \
+	\
+	export GOOS="linux"; \
+	\
+	if command -v gccgo >/dev/null 2>&1; then \
+		export GOROOT_BOOTSTRAP=/usr; \
+	else \
+		export GOROOT_BOOTSTRAP=/usr/lib/go; \
+	fi; \
+	\
+	./make.bash -v; \
+	\
+	apk del go-bootstrap
+
+# Install Go
+# ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
+RUN set -eux; \
+	cd build; \
+	cd "go"; \
+	ls; \
+	pkgdir=""; \
+	mkdir -p "$pkgdir"/usr/bin "$pkgdir"/usr/lib/go/bin; \
+	\
+	for binary in go gofmt; do \
+		install -Dm755 bin/"$binary" "$pkgdir"/usr/lib/go/bin/"$binary"; \
+		ln -s /usr/lib/go/bin/"$binary" "$pkgdir"/usr/bin/; \
+	done; \
+	\
+	cp -a pkg lib "$pkgdir"/usr/lib/go; \
+	\
+	mkdir -p "$pkgdir"/usr/lib/go/; \
+	cp -a src "$pkgdir"/usr/lib/go; \
+	\
+	install -Dm644 go.env "$pkgdir"/usr/lib/go/go.env; \
+	install -Dm644 VERSION "$pkgdir/usr/lib/go/VERSION"
 
 
-# Download packages
+# Download NodeJS packages
+RUN set -eux; \
+	mkdir -p build; \
+	cd build; \
+	wget "https://nodejs.org/dist/v$NODEJS_VER/node-v$NODEJS_VER.tar.gz"; \
+	tar -xf "node-v${NODEJS_VER}.tar.gz"
+
+# Build and install Nodejs
+# build copied from Mastodon image
+RUN set -eux; \
+	cd build; \
+	cd node-v${NODEJS_VER}; \
+# Remove bundled dependencies that we're not using.
+# ref: https://git.alpinelinux.org/aports/tree/main/nodejs/APKBUILD
+	# openssl.cnf is required for build.
+	mv deps/openssl/nodejs-openssl.cnf .; \
+	\
+	# Remove bundled dependencies that we're not using.
+	rm -rf deps/brotli \
+		deps/cares \
+		deps/corepack \
+		deps/openssl/* \
+		deps/v8/third_party/jinja2 \
+		deps/zlib \
+		tools/inspector_protocol/jinja2; \
+	\
+	mv nodejs-openssl.cnf deps/openssl/; \
+# Patching
+	patch -p1 < ../patches/nodejs-fix-build-with-system-c-ares.patch; \
+# Compiler flags
+	export CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"; \
+	export CXXFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"; \
+	export CPPFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"; \
+	\
+# NOTE: We use bundled libuv because they don't care much about backward
+# compatibility and it has happened several times in past that we
+# couldn't upgrade nodejs package in stable branches to fix CVEs due to
+# libuv incompatibility.
+#
+# NOTE: We don't package the bundled npm - it's a separate project with
+# its own release cycle and version numbering, so it's better to keep
+# it in a standalone aport.
+#
+# TODO: Fix and enable corepack.
+	python3 configure.py --prefix=/usr \
+		--shared-brotli \
+		--shared-zlib \
+		--shared-openssl \
+		--shared-cares \
+		--shared-nghttp2 \
+		--ninja \
+		--openssl-use-def-ca-store \
+		--with-icu-default-data-dir=$(icu-config --icudatadir) \
+		--with-intl=system-icu; \
+	\
+# Build, must build without -j or it will fail
+	make -l 8 VERBOSE=1 BUILDTYPE=Release; \
+# Test
+	./node -e 'console.log("Hello, world!")'; \
+	./node -e "require('assert').equal(process.versions.node, '$NODEJS_VER')"; \
+# Install
+	pkgdir=""; \
+	make DESTDIR="$pkgdir" install; \
+	# Install yarn
+	npm install --global yarn
+
+# Download packages for Grafana
 RUN set -eux; \
 	mkdir -p build; \
 	true "Download Grafana..."; \
@@ -61,8 +189,7 @@ RUN set -eux; \
 	# Clone mage which we need for grafana-zabbix
 	git clone --depth=1 https://github.com/magefile/mage
 
-
-# Patch
+# Patch Grafana
 RUN set -eux; \
 	cd build; \
 	true "Patching Grafana..."; \
@@ -70,7 +197,6 @@ RUN set -eux; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-advertising.patch; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-footer.patch; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch
-
 
 # Build and install Grafana
 RUN set -eux; \
