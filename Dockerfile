@@ -22,7 +22,7 @@
 FROM registry.conarx.tech/containers/postfix/3.18 as builder
 
 
-ENV GRAFANA_VER=10.2.2
+ENV GRAFANA_VER=10.2.3
 ENV GRAFANA_ZABBIX_VER=4.4.4
 ENV GO_VER=1.21.4
 ENV NODEJS_VER=18.18.1
