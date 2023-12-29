@@ -19,7 +19,7 @@
 # IN THE SOFTWARE.
 
 
-FROM registry.conarx.tech/containers/postfix/3.18 as builder
+FROM registry.conarx.tech/containers/postfix/3.19 as builder
 
 
 ENV GRAFANA_VER=10.2.3
@@ -296,14 +296,14 @@ RUN set -eux; \
 
 
 
-FROM registry.conarx.tech/containers/postfix/3.18
+FROM registry.conarx.tech/containers/postfix/3.19
 
 
 ARG VERSION_INFO=
 
 LABEL org.opencontainers.image.authors   "Nigel Kukard <nkukard@conarx.tech>"
-LABEL org.opencontainers.image.version   "3.18"
-LABEL org.opencontainers.image.base.name "registry.conarx.tech/containers/postfix/3.18"
+LABEL org.opencontainers.image.version   "3.19"
+LABEL org.opencontainers.image.base.name "registry.conarx.tech/containers/postfix/3.19"
 
 
 # Copy in built binaries
