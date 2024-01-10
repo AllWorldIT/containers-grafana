@@ -23,7 +23,7 @@ FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
 ENV GRAFANA_VER=10.2.3
-ENV GRAFANA_ZABBIX_VER=4.4.4
+ENV GRAFANA_ZABBIX_VER=4.4.5
 ENV GO_VER=1.21.4
 ENV NODEJS_VER=18.18.1
 
