@@ -22,10 +22,10 @@
 FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
-ENV GRAFANA_VER=10.2.3
+ENV GRAFANA_VER=10.3.4
 ENV GRAFANA_ZABBIX_VER=4.4.5
-ENV GO_VER=1.21.4
-ENV NODEJS_VER=18.18.1
+ENV GO_VER=1.21.8
+ENV NODEJS_VER=20.11.1
 
 
 COPY patches /build/patches
@@ -228,7 +228,7 @@ RUN set -eux; \
 	sed -ri 's,^;?(\s*verify_email_enabled\s*=).*,\1 true,' conf/defaults.ini; \
 	sed -ri 's,^;?(\s*mode\s*=)\s*console file.*,\1 console,' conf/defaults.ini; \
 	sed -ri 's,^;?(\s*hide_version\s*=).*,\1 true,' conf/defaults.ini; \
-	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 ::,' conf/defaults.ini; \
+	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 [::],' conf/defaults.ini; \
 	# Make go-lang
 	make gen-go; \
 	# Setup and build
