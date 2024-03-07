@@ -23,8 +23,8 @@ FROM registry.conarx.tech/containers/postfix/3.19 as builder
 
 
 ENV GRAFANA_VER=10.3.4
-ENV GRAFANA_ZABBIX_VER=4.4.5
-ENV GO_VER=1.21.8
+ENV GRAFANA_ZABBIX_VER=4.4.6
+ENV GO_VER=1.22.1
 ENV NODEJS_VER=20.11.1
 
 
@@ -65,9 +65,11 @@ RUN set -eux; \
 	cd build; \
 	true "Patching Go..."; \
 	cd "go"; \
-	patch -p1 < ../patches/go-0001-cmd-link-prefer-musl-s-over-glibc-s-ld.so-during-dyn.patch; \
-	patch -p1 < ../patches/go-0002-misc-cgo-test-enable-setgid-tests-on-Alpine-Linux-ag.patch; \
-	patch -p1 < ../patches/go-0003-go.env-Don-t-switch-Go-toolchain-version-as-directed.patch
+	patch -p1 < ../patches/0001-cmd-link-prefer-musl-s-over-glibc-s-ld.so-during-dyn.patch; \
+	patch -p1 < ../patches/0002-misc-cgo-test-enable-setgid-tests-on-Alpine-Linux-ag.patch; \
+	patch -p1 < ../patches/0003-go.env-Don-t-switch-Go-toolchain-version-as-directed.patch; \
+	patch -p1 < ../patches/0005-cmd-dist-cmd-go-define-assembly-macros-handle-GOARM-.patch; \
+	patch -p1 < ../patches/0006-cmd-link-internal-riscv64-generate-local-text-symbol.patch
 
 # Build Go
 # ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
@@ -196,7 +198,9 @@ RUN set -eux; \
 	cd "grafana-${GRAFANA_VER}"; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-advertising.patch; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-footer.patch; \
-	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch
+	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch; \
+	# Hotfix wire 0.5.0 with 0.6.0
+	wget -O- https://patch-diff.githubusercontent.com/raw/grafana/grafana/pull/82114.patch | patch -p1
 
 # Build and install Grafana
 RUN set -eux; \
@@ -270,7 +274,8 @@ RUN set -eux; \
 	# Install node and go deps
 	yarn install --ignore-engines; \
 	go install -v ./pkg/; \
-	GO111MODULE=off go get -u golang.org/x/lint/golint; \
+	go get -u golang.org/x/lint/golint; \
+	go get -u golang.org/x/net/idna; \
 	# Build frontend
 	NODE_ENV=production yarn run build; \
 	# Build backend
