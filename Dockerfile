@@ -22,7 +22,7 @@
 FROM registry.conarx.tech/containers/postfix/3.19 as builder
 
 
-ENV GRAFANA_VER=10.3.4
+ENV GRAFANA_VER=10.4.1
 ENV GRAFANA_ZABBIX_VER=4.4.6
 ENV GO_VER=1.22.1
 ENV NODEJS_VER=20.11.1
@@ -198,9 +198,7 @@ RUN set -eux; \
 	cd "grafana-${GRAFANA_VER}"; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-advertising.patch; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-footer.patch; \
-	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch; \
-	# Hotfix wire 0.5.0 with 0.6.0
-	wget -O- https://patch-diff.githubusercontent.com/raw/grafana/grafana/pull/82114.patch | patch -p1
+	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch
 
 # Build and install Grafana
 RUN set -eux; \
@@ -249,6 +247,7 @@ RUN set -eux; \
 	install -dm755 "/build/grafana-root/var/log/grafana"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/db"; \
+	install -dm755 "/build/grafana-root/var/lib/grafana/pdf"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/plugins"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/conf/provisioning"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/conf/provisioning/alerting"; \
