@@ -22,9 +22,9 @@
 FROM registry.conarx.tech/containers/postfix/3.20 as builder
 
 
-ENV GRAFANA_VER=11.0.0
+ENV GRAFANA_VER=11.1.0
 ENV GRAFANA_ZABBIX_VER=4.5.1
-ENV GO_VER=1.22.1
+ENV GO_VER=1.22.4
 ENV NODEJS_VER=20.13.1
 
 
@@ -68,8 +68,7 @@ RUN set -eux; \
 	patch -p1 < ../patches/0001-cmd-link-prefer-musl-s-over-glibc-s-ld.so-during-dyn.patch; \
 	patch -p1 < ../patches/0002-misc-cgo-test-enable-setgid-tests-on-Alpine-Linux-ag.patch; \
 	patch -p1 < ../patches/0003-go.env-Don-t-switch-Go-toolchain-version-as-directed.patch; \
-	patch -p1 < ../patches/0005-cmd-dist-cmd-go-define-assembly-macros-handle-GOARM-.patch; \
-	patch -p1 < ../patches/0006-cmd-link-internal-riscv64-generate-local-text-symbol.patch
+	patch -p1 < ../patches/0005-cmd-dist-cmd-go-define-assembly-macros-handle-GOARM-.patch
 
 # Build Go
 # ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
