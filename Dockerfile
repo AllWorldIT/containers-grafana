@@ -23,9 +23,9 @@ FROM registry.conarx.tech/containers/postfix/3.20 as builder
 
 
 ENV GRAFANA_VER=11.1.0
-ENV GRAFANA_ZABBIX_VER=4.5.1
-ENV GO_VER=1.22.4
-ENV NODEJS_VER=20.13.1
+ENV GRAFANA_ZABBIX_VER=4.5.2
+ENV GO_VER=1.22.5
+ENV NODEJS_VER=20.15.0
 
 
 COPY patches /build/patches
@@ -214,7 +214,7 @@ RUN set -eux; \
 	cd "../grafana-${GRAFANA_VER}"; \
 	# Compiler flags
 	. /etc/buildflags; \
-	export GOFLAGS="$GOFLAGS -tags=libsqlite3"; \
+	export GOFLAGS="-buildmode=pie -trimpath -modcacherw"; \
 	# Set default paths
 	sed -ri 's,^(\s*data\s*=).*,\1 /var/lib/grafana,' conf/defaults.ini; \
 	sed -ri 's,^(\s*plugins\s*=).*,\1 /var/lib/grafana/plugins,' conf/defaults.ini; \
@@ -274,6 +274,10 @@ RUN set -eux; \
 	go install -v ./pkg/; \
 	go get -u golang.org/x/lint/golint; \
 	go get -u golang.org/x/net/idna; \
+	# Work around issue
+	#   memory_amd64 missing go.sum entry
+	go get -u github.com/apache/arrow/go/v15/arrow/memory; \
+	go get -u github.com/grafana/grafana-plugin-sdk-go; \
 	# Build frontend
 	NODE_ENV=production yarn run build; \
 	# Build backend
