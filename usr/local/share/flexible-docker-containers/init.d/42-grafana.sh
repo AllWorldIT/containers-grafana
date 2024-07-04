@@ -48,7 +48,7 @@ fdc_notice "Initializing Grafana settings"
 if [ ! -e /etc/grafana/grafana.ini ]; then
 	cp /usr/local/share/grafana/conf/sample.ini /etc/grafana/grafana.ini
 	# Fix issue where Grafana fails to start, we need to listen on [::]
-	sed -i -e 's/^;http_addr\s*=.*/http_addr = [::]/' /etc/grafana/grafana.ini
+	sed -i -e 's/^;http_addr\s*=.*/http_addr = ::/' /etc/grafana/grafana.ini
 fi
 chown grafana:grafana /etc/grafana/grafana.ini
 chmod 0640 /etc/grafana/grafana.ini

@@ -34,7 +34,7 @@ for c in \
 	"verify_email_enabled = true" \
 	"mode = console\$" \
 	"hide_version = true\$" \
-	"http_addr = \\[::\\]\$" \
+	"http_addr = ::\$" \
 	; do
 
 		fdc_test_progress grafana "Checking default config: $c"
