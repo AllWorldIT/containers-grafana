@@ -229,7 +229,7 @@ RUN set -eux; \
 	sed -ri 's,^;?(\s*verify_email_enabled\s*=).*,\1 true,' conf/defaults.ini; \
 	sed -ri 's,^;?(\s*mode\s*=)\s*console file.*,\1 console,' conf/defaults.ini; \
 	sed -ri 's,^;?(\s*hide_version\s*=).*,\1 true,' conf/defaults.ini; \
-	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 [::],' conf/defaults.ini; \
+	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 ::,' conf/defaults.ini; \
 	# Make go-lang
 	make gen-go; \
 	# Setup and build
