@@ -22,10 +22,10 @@
 FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
-ENV GRAFANA_VER=11.0.0
-ENV GRAFANA_ZABBIX_VER=4.5.1
-ENV GO_VER=1.22.1
-ENV NODEJS_VER=20.13.1
+ENV GRAFANA_VER=11.1.0
+ENV GRAFANA_ZABBIX_VER=4.5.2
+ENV GO_VER=1.22.5
+ENV NODEJS_VER=20.15.0
 
 
 COPY patches /build/patches
@@ -68,8 +68,7 @@ RUN set -eux; \
 	patch -p1 < ../patches/0001-cmd-link-prefer-musl-s-over-glibc-s-ld.so-during-dyn.patch; \
 	patch -p1 < ../patches/0002-misc-cgo-test-enable-setgid-tests-on-Alpine-Linux-ag.patch; \
 	patch -p1 < ../patches/0003-go.env-Don-t-switch-Go-toolchain-version-as-directed.patch; \
-	patch -p1 < ../patches/0005-cmd-dist-cmd-go-define-assembly-macros-handle-GOARM-.patch; \
-	patch -p1 < ../patches/0006-cmd-link-internal-riscv64-generate-local-text-symbol.patch
+	patch -p1 < ../patches/0005-cmd-dist-cmd-go-define-assembly-macros-handle-GOARM-.patch
 
 # Build Go
 # ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
@@ -215,7 +214,7 @@ RUN set -eux; \
 	cd "../grafana-${GRAFANA_VER}"; \
 	# Compiler flags
 	. /etc/buildflags; \
-	export GOFLAGS="$GOFLAGS -tags=libsqlite3"; \
+	export GOFLAGS="-buildmode=pie -trimpath -modcacherw"; \
 	# Set default paths
 	sed -ri 's,^(\s*data\s*=).*,\1 /var/lib/grafana,' conf/defaults.ini; \
 	sed -ri 's,^(\s*plugins\s*=).*,\1 /var/lib/grafana/plugins,' conf/defaults.ini; \
@@ -230,7 +229,7 @@ RUN set -eux; \
 	sed -ri 's,^;?(\s*verify_email_enabled\s*=).*,\1 true,' conf/defaults.ini; \
 	sed -ri 's,^;?(\s*mode\s*=)\s*console file.*,\1 console,' conf/defaults.ini; \
 	sed -ri 's,^;?(\s*hide_version\s*=).*,\1 true,' conf/defaults.ini; \
-	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 [::],' conf/defaults.ini; \
+	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 ::,' conf/defaults.ini; \
 	# Make go-lang
 	make gen-go; \
 	# Setup and build
@@ -275,6 +274,10 @@ RUN set -eux; \
 	go install -v ./pkg/; \
 	go get -u golang.org/x/lint/golint; \
 	go get -u golang.org/x/net/idna; \
+	# Work around issue
+	#   memory_amd64 missing go.sum entry
+	go get -u github.com/apache/arrow/go/v15/arrow/memory; \
+	go get -u github.com/grafana/grafana-plugin-sdk-go; \
 	# Build frontend
 	NODE_ENV=production yarn run build; \
 	# Build backend
