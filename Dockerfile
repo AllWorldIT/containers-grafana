@@ -22,7 +22,7 @@
 FROM registry.conarx.tech/containers/postfix/edge as builder
 
 
-ENV GRAFANA_VER=11.1.0
+ENV GRAFANA_VER=11.1.2
 ENV GRAFANA_ZABBIX_VER=4.5.2
 ENV GO_VER=1.22.5
 ENV NODEJS_VER=20.15.0
@@ -278,6 +278,8 @@ RUN set -eux; \
 	#   memory_amd64 missing go.sum entry
 	go get -u github.com/apache/arrow/go/v15/arrow/memory; \
 	go get -u github.com/grafana/grafana-plugin-sdk-go; \
+	go get -u go.opentelemetry.io/proto/otlp/common/v1; \
+	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/runtime; \
 	# Build frontend
 	NODE_ENV=production yarn run build; \
 	# Build backend
