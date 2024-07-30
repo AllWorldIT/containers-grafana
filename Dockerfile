@@ -266,27 +266,23 @@ RUN set -eux; \
 	install -Dm640 conf/sample.ini "/build/grafana-root/etc/grafana/grafana.ini"; \
 	#
 	# Build Grafana Zabbix plugin
-	# - pulled from grafana-zabbix Makefile
+	# - NK: inspired by Arch PKGBUILD
 	#
 	cd "../grafana-zabbix-${GRAFANA_ZABBIX_VER}"; \
-	# Install node and go deps
-	yarn install --ignore-engines; \
-	go install -v ./pkg/; \
-	go get -u golang.org/x/lint/golint; \
-	go get -u golang.org/x/net/idna; \
-	# Work around issue
-	#   memory_amd64 missing go.sum entry
-	go get -u github.com/apache/arrow/go/v15/arrow/memory; \
-	go get -u github.com/grafana/grafana-plugin-sdk-go; \
-	go get -u go.opentelemetry.io/proto/otlp/common/v1; \
-	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/runtime; \
+	# Fix tests not working without git clone
+	sed -i 's#jest --watch --onlyChanged#jest#' package.json; \
+	# Remove lint related dependency (we don't care about linting tests at our level)
+	sed -i '/GO111MODULE=off go get -u golang.org\/x\/lint\/golint/d' Makefile; \
+	# Install deps and build
+	make install; \
+	make build; \
 	# Build frontend
-	NODE_ENV=production yarn run build; \
+	make dist-frontend; \
 	# Build backend
 	make dist-backend-linux; \
 	# Install
 	install -dm755 "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
-	cp -r dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
+	cp -rv dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
 	#
 	# Cleanup
 	#
