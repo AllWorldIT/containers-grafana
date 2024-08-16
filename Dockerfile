@@ -279,6 +279,13 @@ RUN set -eux; \
 	# Build frontend
 	make dist-frontend; \
 	# Build backend
+	go get github.com/prometheus/common/expfmt; \
+	go get google.golang.org/grpc/internal/transport; \
+	go get github.com/grafana/grafana-plugin-sdk-go/backend/proxy; \
+	go get github.com/apache/arrow/go/v15/arrow/memory; \
+	go get github.com/alexanderzobnin/grafana-zabbix/pkg/zabbixapi; \
+	go get github.com/alexanderzobnin/grafana-zabbix/pkg/datasource; \
+	\
 	make dist-backend-linux; \
 	# Install
 	install -dm755 "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
