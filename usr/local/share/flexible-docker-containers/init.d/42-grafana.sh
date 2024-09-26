@@ -31,7 +31,7 @@ chmod 0750 /run/grafana
 
 for i in \
 		/var/lib/grafana/conf/provisioning{,/datasources,/plugins,/notifiers,/alerting,/dashboards} \
-		/var/lib/grafana/{alerting,csv,db,plugins,png} \
+		/var/lib/grafana/{alerting,grafana-apiserver,csv,db,plugins,png} \
 		; do
 	if [ ! -d "$i" ]; then
 		mkdir -p "$i"
