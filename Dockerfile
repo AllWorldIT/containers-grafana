@@ -23,10 +23,12 @@ FROM registry.conarx.tech/containers/postfix/3.20 as builder
 
 
 ENV GRAFANA_VER=11.2.2
+ENV GRAFANA_EXTRA_VER=+security-01
+ENV GRAFANA_EXTRA_DIR=-security-01
 ENV GRAFANA_ZABBIX_VER=4.5.5
 ENV GO_VER=1.22.7
-ENV NODEJS_VER=20.17.0
 
+COPY --from=registry.conarx.tech/containers/nodejs/3.20:22.10.0 /opt/nodejs-22.10.0 /opt/nodejs-22.10.0
 
 COPY patches /build/patches
 
@@ -50,7 +52,7 @@ RUN set -eux; \
 		\
 # For NodeJS
 		ca-certificates \
-		brotli-dev c-ares-dev icu-dev linux-headers nghttp2-dev openssl-dev python3 py3-jinja2 samurai zlib-dev
+		libuv
 
 # Download Go package
 RUN set -eux; \
@@ -107,79 +109,12 @@ RUN set -eux; \
 	install -Dm644 go.env "$pkgdir"/usr/lib/go/go.env; \
 	install -Dm644 VERSION "$pkgdir/usr/lib/go/VERSION"
 
-
-# Download NodeJS packages
-RUN set -eux; \
-	mkdir -p build; \
-	cd build; \
-	wget "https://nodejs.org/dist/v$NODEJS_VER/node-v$NODEJS_VER.tar.gz"; \
-	tar -xf "node-v${NODEJS_VER}.tar.gz"
-
-# Build and install Nodejs
-# build copied from Mastodon image
-RUN set -eux; \
-	cd build; \
-	cd node-v${NODEJS_VER}; \
-# Remove bundled dependencies that we're not using.
-# ref: https://git.alpinelinux.org/aports/tree/main/nodejs/APKBUILD
-	# openssl.cnf is required for build.
-	mv deps/openssl/nodejs-openssl.cnf .; \
-	\
-	# Remove bundled dependencies that we're not using.
-	rm -rf deps/brotli \
-		deps/cares \
-		deps/corepack \
-		deps/openssl/* \
-		deps/v8/third_party/jinja2 \
-		deps/zlib \
-		tools/inspector_protocol/jinja2; \
-	\
-	mv nodejs-openssl.cnf deps/openssl/; \
-# Patching
-	patch -p1 < ../patches/nodejs-fix-build-with-system-c-ares.patch; \
-# Compiler flags
-	export CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"; \
-	export CXXFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"; \
-	export CPPFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"; \
-	\
-# NOTE: We use bundled libuv because they don't care much about backward
-# compatibility and it has happened several times in past that we
-# couldn't upgrade nodejs package in stable branches to fix CVEs due to
-# libuv incompatibility.
-#
-# NOTE: We don't package the bundled npm - it's a separate project with
-# its own release cycle and version numbering, so it's better to keep
-# it in a standalone aport.
-#
-# TODO: Fix and enable corepack.
-	python3 configure.py --prefix=/usr \
-		--shared-brotli \
-		--shared-zlib \
-		--shared-openssl \
-		--shared-cares \
-		--shared-nghttp2 \
-		--ninja \
-		--openssl-use-def-ca-store \
-		--with-icu-default-data-dir=$(icu-config --icudatadir) \
-		--with-intl=system-icu; \
-	\
-# Build, must build without -j or it will fail
-	make -l 8 VERBOSE=1 BUILDTYPE=Release; \
-# Test
-	./node -e 'console.log("Hello, world!")'; \
-	./node -e "require('assert').equal(process.versions.node, '$NODEJS_VER')"; \
-# Install
-	pkgdir=""; \
-	make DESTDIR="$pkgdir" install; \
-	# Install yarn
-	npm install --global yarn
-
 # Download packages for Grafana
 RUN set -eux; \
 	mkdir -p build; \
 	true "Download Grafana..."; \
 	cd build; \
-	wget "https://github.com/grafana/grafana/archive/refs/tags/v${GRAFANA_VER}.tar.gz" -O "grafana-${GRAFANA_VER}.tar.gz"; \
+	wget "https://github.com/grafana/grafana/archive/refs/tags/v${GRAFANA_VER}${GRAFANA_EXTRA_VER}.tar.gz" -O "grafana-${GRAFANA_VER}.tar.gz"; \
 	tar -zxf "grafana-${GRAFANA_VER}.tar.gz"; \
 	true "Download the Grafana Zabbix plugin..."; \
 	wget "https://github.com/alexanderzobnin/grafana-zabbix/archive/v${GRAFANA_ZABBIX_VER}.tar.gz" -O "grafana-zabbix-${GRAFANA_ZABBIX_VER}.tar.gz"; \
@@ -191,7 +126,7 @@ RUN set -eux; \
 RUN set -eux; \
 	cd build; \
 	true "Patching Grafana..."; \
-	cd "grafana-${GRAFANA_VER}"; \
+	cd "grafana-${GRAFANA_VER}${GRAFANA_EXTRA_DIR}"; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-advertising.patch; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-footer.patch; \
 	patch -p1 < ../patches/grafana-10.1.0_remove-enterprise-cloud-plugins.patch
@@ -199,6 +134,15 @@ RUN set -eux; \
 # Build and install Grafana
 RUN set -eux; \
 	cd build; \
+	# Setup environment
+	for i in /opt/*/ld-musl-x86_64.path; do \
+		cat "$i" >> /etc/ld-musl-x86_64.path; \
+	done; \
+	for i in /opt/*/PATH; do \
+		export PATH="$(cat "$i"):$PATH"; \
+	done; \
+	# Install Yarn
+	npm install --global yarn; \
 	#
 	# Build and install mage, required for grafana-zabbix
 	#
@@ -208,7 +152,7 @@ RUN set -eux; \
 	#
 	# Build Grafana
 	#
-	cd "../grafana-${GRAFANA_VER}"; \
+	cd "../grafana-${GRAFANA_VER}${GRAFANA_EXTRA_DIR}"; \
 	# Compiler flags
 	. /etc/buildflags; \
 	export GOFLAGS="-buildmode=pie -trimpath -modcacherw"; \
