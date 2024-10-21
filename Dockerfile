@@ -19,13 +19,13 @@
 # IN THE SOFTWARE.
 
 
-FROM registry.conarx.tech/containers/postfix/edge as builder
+FROM registry.conarx.tech/containers/alpine/edge as builder
 
 
 ENV GRAFANA_VER=11.2.2
 ENV GRAFANA_EXTRA_VER=+security-01
 ENV GRAFANA_EXTRA_DIR=-security-01
-ENV GRAFANA_ZABBIX_VER=4.5.5
+ENV GRAFANA_ZABBIX_VER=4.5.6
 ENV GO_VER=1.22.7
 
 COPY --from=registry.conarx.tech/containers/nodejs/3.20:22.10.0 /opt/nodejs-22.10.0 /opt/nodejs-22.10.0
@@ -52,6 +52,7 @@ RUN set -eux; \
 		\
 # For NodeJS
 		ca-certificates \
+		icu-libs \
 		libuv
 
 # Download Go package
