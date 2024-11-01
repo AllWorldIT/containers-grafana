@@ -25,7 +25,7 @@ FROM registry.conarx.tech/containers/alpine/edge as builder
 ENV GRAFANA_VER=11.2.3
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
-ENV GRAFANA_ZABBIX_VER=4.5.6
+ENV GRAFANA_ZABBIX_VER=4.5.7
 ENV GO_VER=1.22.7
 
 COPY --from=registry.conarx.tech/containers/nodejs/3.20:22.10.0 /opt/nodejs-22.10.0 /opt/nodejs-22.10.0
