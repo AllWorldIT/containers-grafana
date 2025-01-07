@@ -19,7 +19,7 @@
 # IN THE SOFTWARE.
 
 
-FROM registry.conarx.tech/containers/alpine/3.20 as builder
+FROM registry.conarx.tech/containers/alpine/3.21 as builder
 
 
 ENV GRAFANA_VER=11.3.2
@@ -28,7 +28,7 @@ ENV GRAFANA_EXTRA_DIR=
 ENV GRAFANA_ZABBIX_VER=4.6.0
 ENV GO_VER=1.22.7
 
-COPY --from=registry.conarx.tech/containers/nodejs/3.20:22.12.0 /opt/nodejs-22.12.0 /opt/nodejs-22.12.0
+COPY --from=registry.conarx.tech/containers/nodejs/3.21:22.12.0 /opt/nodejs-22.12.0 /opt/nodejs-22.12.0
 
 COPY patches /build/patches
 
@@ -250,14 +250,14 @@ RUN set -eux; \
 
 
 
-FROM registry.conarx.tech/containers/postfix/3.20
+FROM registry.conarx.tech/containers/postfix/3.21
 
 
 ARG VERSION_INFO=
 
 LABEL org.opencontainers.image.authors   = "Nigel Kukard <nkukard@conarx.tech>"
-LABEL org.opencontainers.image.version   = "3.20"
-LABEL org.opencontainers.image.base.name = "registry.conarx.tech/containers/postfix/3.20"
+LABEL org.opencontainers.image.version   = "3.21"
+LABEL org.opencontainers.image.base.name = "registry.conarx.tech/containers/postfix/3.21"
 
 
 # Copy in built binaries
