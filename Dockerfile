@@ -22,7 +22,7 @@
 FROM registry.conarx.tech/containers/alpine/edge as builder
 
 
-ENV GRAFANA_VER=11.5.2
+ENV GRAFANA_VER=11.5.3
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
 ENV GRAFANA_ZABBIX_VER=5.0.3
