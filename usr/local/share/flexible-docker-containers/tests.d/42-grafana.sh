@@ -44,3 +44,14 @@ for c in \
 		fi
 done
 fdc_test_pass grafana "Default configuration tests passed"
+
+# Wait up to 1 minute for the healtcheck to pass, this may take some time as Grafana takes time to start up
+fdc_test_start grafana "Testing healthcheck"
+for i in $(seq 1 60); do
+	fdc_test_progress grafana "Waiting for healthcheck to pass ($i/60)"
+	if /usr/local/share/flexible-docker-containers/healthcheck.d/42-grafana.sh; then
+		fdc_test_pass grafana "Healthcheck passed"
+		break
+	fi
+	sleep 1
+done
