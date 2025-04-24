@@ -22,10 +22,9 @@
 FROM registry.conarx.tech/containers/alpine/edge as builder
 
 
-ENV GRAFANA_VER=11.6.0
-ENV GRAFANA_EXTRA_VER=+security-01
-ENV GRAFANA_EXTRA_DIR=-security-01
-ENV GRAFANA_ZABBIX_VER=5.0.4
+ENV GRAFANA_VER=11.6.1
+ENV GRAFANA_EXTRA_VER=
+ENV GRAFANA_EXTRA_DIR=
 ENV GO_VER=1.24.0
 
 COPY --from=registry.conarx.tech/containers/nodejs/edge:22.14.0 /opt/nodejs-22.14.0 /opt/nodejs-22.14.0
@@ -116,12 +115,7 @@ RUN set -eux; \
 	true "Download Grafana..."; \
 	cd build; \
 	wget "https://github.com/grafana/grafana/archive/refs/tags/v${GRAFANA_VER}${GRAFANA_EXTRA_VER}.tar.gz" -O "grafana-${GRAFANA_VER}.tar.gz"; \
-	tar -zxf "grafana-${GRAFANA_VER}.tar.gz"; \
-	true "Download the Grafana Zabbix plugin..."; \
-	wget "https://github.com/alexanderzobnin/grafana-zabbix/archive/v${GRAFANA_ZABBIX_VER}.tar.gz" -O "grafana-zabbix-${GRAFANA_ZABBIX_VER}.tar.gz"; \
-	tar -zxf "grafana-zabbix-${GRAFANA_ZABBIX_VER}.tar.gz"; \
-	# Clone mage which we need for grafana-zabbix
-	git clone --depth=1 https://github.com/magefile/mage
+	tar -zxf "grafana-${GRAFANA_VER}.tar.gz"
 
 # Patch Grafana
 RUN set -eux; \
@@ -145,15 +139,9 @@ RUN set -eux; \
 	# Install Yarn
 	npm install --global yarn; \
 	#
-	# Build and install mage, required for grafana-zabbix
-	#
-	cd mage; \
-	GOBIN=~/bin GOPATH=~/.go go run bootstrap.go; \
-	export PATH=$PATH:~/bin; \
-	#
 	# Build Grafana
 	#
-	cd "../grafana-${GRAFANA_VER}${GRAFANA_EXTRA_DIR}"; \
+	cd "grafana-${GRAFANA_VER}${GRAFANA_EXTRA_DIR}"; \
 	# Compiler flags
 	. /etc/buildflags; \
 	export GOFLAGS="-buildmode=pie -trimpath -modcacherw"; \
@@ -206,32 +194,6 @@ RUN set -eux; \
 	install -Dm644 conf/defaults.ini "/build/grafana-root/usr/local/share/grafana/conf/defaults.ini"; \
 	install -Dm644 conf/sample.ini "/build/grafana-root/usr/local/share/grafana/conf/sample.ini"; \
 	install -Dm640 conf/sample.ini "/build/grafana-root/etc/grafana/grafana.ini"; \
-	#
-	# Build Grafana Zabbix plugin
-	# - NK: inspired by Arch PKGBUILD
-	#
-	cd "../grafana-zabbix-${GRAFANA_ZABBIX_VER}"; \
-	# Fix tests not working without git clone
-	sed -i 's#jest --watch --onlyChanged#jest#' package.json; \
-	# Remove lint related dependency (we don't care about linting tests at our level)
-	sed -i '/GO111MODULE=off go get -u golang.org\/x\/lint\/golint/d' Makefile; \
-	# Install deps and build
-	make install; \
-	make build; \
-	# Build frontend
-	make dist-frontend; \
-	# Build backend
-	go get github.com/prometheus/common/expfmt; \
-	go get google.golang.org/grpc/internal/transport; \
-	go get github.com/grafana/grafana-plugin-sdk-go/backend/proxy; \
-	go get github.com/apache/arrow/go/v15/arrow/memory; \
-	go get github.com/alexanderzobnin/grafana-zabbix/pkg/zabbixapi; \
-	go get github.com/alexanderzobnin/grafana-zabbix/pkg/datasource; \
-	\
-	make dist-backend-linux; \
-	# Install
-	install -dm755 "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
-	cp -rv dist/* "/build/grafana-root/usr/local/share/grafana/plugins-bundled/alexanderzobnin-zabbix-app"; \
 	#
 	# Cleanup
 	#
