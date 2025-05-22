@@ -22,12 +22,13 @@
 FROM registry.conarx.tech/containers/alpine/3.21 as builder
 
 
-ENV GRAFANA_VER=11.6.1
+ENV GRAFANA_VER=12.0.1
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
 ENV GO_VER=1.24.0
 
-COPY --from=registry.conarx.tech/containers/nodejs/3.21:22.14.0 /opt/nodejs-22.14.0 /opt/nodejs-22.14.0
+COPY --from=registry.conarx.tech/containers/go/3.21:1.24.3 /opt/go-1.24.3 /opt/go-1.24.3
+COPY --from=registry.conarx.tech/containers/nodejs/3.21:22.16.0 /opt/nodejs-22.16.0 /opt/nodejs-22.16.0
 
 COPY patches /build/patches
 
@@ -46,68 +47,10 @@ RUN set -eux; \
 		fontconfig \
 		ghostscript-fonts \
 		\
-# For Go
-		go-bootstrap \
-		\
 # For NodeJS
 		ca-certificates \
 		icu-libs \
 		libuv
-
-# Download Go package
-RUN set -eux; \
-	mkdir -p build; \
-	true "Download Go..."; \
-	cd build; \
-	wget "https://go.dev/dl/go${GO_VER}.src.tar.gz" -O "go-${GO_VER}.src.tar.gz"; \
-	tar -zxf "go-${GO_VER}.src.tar.gz"
-
-# Patch Go
-RUN set -eux; \
-	cd build; \
-	true "Patching Go..."; \
-	cd "go"; \
-	patch -p1 < ../patches/0001-cmd-link-prefer-musl-s-over-glibc-s-ld.so-during-dyn.patch
-
-# Build Go
-# ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
-RUN set -eux; \
-	cd build; \
-	cd "go/src"; \
-	\
-	export GOOS="linux"; \
-	\
-	if command -v gccgo >/dev/null 2>&1; then \
-		export GOROOT_BOOTSTRAP=/usr; \
-	else \
-		export GOROOT_BOOTSTRAP=/usr/lib/go; \
-	fi; \
-	\
-	./make.bash -v; \
-	\
-	apk del go-bootstrap
-
-# Install Go
-# ref: https://git.alpinelinux.org/aports/tree/community/go/APKBUILD
-RUN set -eux; \
-	cd build; \
-	cd "go"; \
-	ls; \
-	pkgdir=""; \
-	mkdir -p "$pkgdir"/usr/bin "$pkgdir"/usr/lib/go/bin; \
-	\
-	for binary in go gofmt; do \
-		install -Dm755 bin/"$binary" "$pkgdir"/usr/lib/go/bin/"$binary"; \
-		ln -s /usr/lib/go/bin/"$binary" "$pkgdir"/usr/bin/; \
-	done; \
-	\
-	cp -a pkg lib "$pkgdir"/usr/lib/go; \
-	\
-	mkdir -p "$pkgdir"/usr/lib/go/; \
-	cp -a src "$pkgdir"/usr/lib/go; \
-	\
-	install -Dm644 go.env "$pkgdir"/usr/lib/go/go.env; \
-	install -Dm644 VERSION "$pkgdir/usr/lib/go/VERSION"
 
 # Download packages for Grafana
 RUN set -eux; \
