@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023, AllWorldIT.
+# Copyright (c) 2022-2025, AllWorldIT.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -22,12 +22,13 @@
 FROM registry.conarx.tech/containers/alpine/3.21 as builder
 
 
-ENV GRAFANA_VER=11.6.2
+ENV GRAFANA_VER=12.0.1
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
+ENV GO_VER=1.24.0
 
-COPY --from=registry.conarx.tech/containers/go/3.21:1.24.3 /opt/go-1.24.3 /opt/go-1.24.3
-COPY --from=registry.conarx.tech/containers/nodejs/3.21:22.16.0 /opt/nodejs-22.16.0 /opt/nodejs-22.16.0
+COPY --from=registry.conarx.tech/containers/go/edge:1.24.3 /opt/go-1.24.3 /opt/go-1.24.3
+COPY --from=registry.conarx.tech/containers/nodejs/edge:22.16.0 /opt/nodejs-22.16.0 /opt/nodejs-22.16.0
 
 COPY patches /build/patches
 
@@ -160,8 +161,8 @@ FROM registry.conarx.tech/containers/postfix/3.21
 ARG VERSION_INFO=
 
 LABEL org.opencontainers.image.authors   = "Nigel Kukard <nkukard@conarx.tech>"
-LABEL org.opencontainers.image.version   = "3.21"
-LABEL org.opencontainers.image.base.name = "registry.conarx.tech/containers/postfix/3.21"
+LABEL org.opencontainers.image.version   = "edge"
+LABEL org.opencontainers.image.base.name = "registry.conarx.tech/containers/postfix/edge"
 
 
 # Copy in built binaries
