@@ -70,5 +70,5 @@ chmod 0640 /run/grafana/grafana.env
 fdc_notice "Setting up Grafana permissions"
 chown -R root:grafana /var/lib/grafana
 find /var/lib/grafana -type d -print0 | xargs -0 -r chmod 0775
-find /var/lib/grafana -type f -print0 | xargs -0 -r chmod 0664 grafana:grafana
+find /var/lib/grafana -type f -print0 | xargs -0 -r chmod 0664
 find /var/lib/grafana -type f -print0 | xargs -0 -r chown grafana:grafana
