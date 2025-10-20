@@ -36,8 +36,6 @@ for i in \
 	if [ ! -d "$i" ]; then
 		mkdir -p "$i"
 	fi
-	chown grafana:grafana "$i"
-	chmod 0750 "$i"
 done
 chown root:grafana /etc/grafana
 chmod 750 /etc/grafana
@@ -68,5 +66,5 @@ chown root:grafana /run/grafana/grafana.env
 chmod 0640 /run/grafana/grafana.env
 
 fdc_notice "Setting up Grafana permissions"
-chown -R root:grafana /var/lib/grafana
-find /var/lib/grafana -type d -print0 | xargs -0 -r chmod 0775
+chown -R grafana:grafana /var/lib/grafana
+find /var/lib/grafana -type d -print0 | xargs -0 -r chmod 0750
