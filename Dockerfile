@@ -22,14 +22,14 @@
 FROM registry.conarx.tech/containers/alpine/3.22 as builder
 
 
-ENV GRAFANA_VER=12.2.0
+ENV GRAFANA_VER=12.2.1
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
 #ENV GRAFANA_EXTRA_VER=+security-01
 #ENV GRAFANA_EXTRA_DIR=-security-01
 
-COPY --from=registry.conarx.tech/containers/go/3.22:1.24.6 /opt/go-1.24.6 /opt/go-1.24.6
-COPY --from=registry.conarx.tech/containers/nodejs/3.22:22.17.1 /opt/nodejs-22.17.1 /opt/nodejs-22.17.1
+COPY --from=registry.conarx.tech/containers/go/3.22:1.25.3 /opt/go-1.25.3 /opt/go-1.25.3
+COPY --from=registry.conarx.tech/containers/nodejs/3.22:22.21.0 /opt/nodejs-22.21.0 /opt/nodejs-22.21.0
 
 COPY patches /build/patches
 
