@@ -28,7 +28,7 @@ ENV GRAFANA_EXTRA_DIR=
 #ENV GRAFANA_EXTRA_VER=+security-01
 #ENV GRAFANA_EXTRA_DIR=-security-01
 
-COPY --from=registry.conarx.tech/containers/go/edge:1.25.6 /opt/go-1.25.6 /opt/go-1.25.6
+COPY --from=registry.conarx.tech/containers/go/edge:1.25.7 /opt/go-1.25.7 /opt/go-1.25.7
 COPY --from=registry.conarx.tech/containers/nodejs/edge:24.13.0 /opt/nodejs-24.13.0 /opt/nodejs-24.13.0
 
 COPY patches /build/patches
