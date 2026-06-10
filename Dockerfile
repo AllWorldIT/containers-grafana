@@ -22,13 +22,13 @@
 FROM registry.conarx.tech/containers/alpine/3.22 as builder
 
 
-ENV GRAFANA_VER=12.4.3
+ENV GRAFANA_VER=13.0.2
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
-ENV GRAFANA_EXTRA_VER=+security-02
-ENV GRAFANA_EXTRA_DIR=-security-02
+#ENV GRAFANA_EXTRA_VER=+security-02
+#ENV GRAFANA_EXTRA_DIR=-security-02
 
-COPY --from=registry.conarx.tech/containers/go/3.22:1.25.9 /opt/go-1.25.9 /opt/go-1.25.9
+COPY --from=registry.conarx.tech/containers/go/3.22:1.26.4 /opt/go-1.26.4 /opt/go-1.26.4
 COPY --from=registry.conarx.tech/containers/nodejs/3.22:24.14.1 /opt/nodejs-24.14.1 /opt/nodejs-24.14.1
 
 COPY patches /build/patches
@@ -106,9 +106,16 @@ RUN set -eux; \
 	sed -ri 's,^;?(\s*http_addr\s*=).*,\1 ::,' conf/defaults.ini; \
 	# Make go-lang
 	make gen-go; \
-	# Setup and build
-	go run build.go setup; \
-	go run build.go build; \
+	make gen-themes; \
+	# Build Grafana backend (Grafana 13 builds a single unified binary, replacing build.go)
+	export BUILD_DATE="$(date --utc --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y-%m-%d)"; \
+	go build \
+		-trimpath \
+		-buildmode=pie \
+		-mod=readonly \
+		-modcacherw \
+		-ldflags "-linkmode external -extldflags \"${LDFLAGS}\" -X \"main.version=${GRAFANA_VER}\" -X \"main.buildstamp=${BUILD_DATE}\"" \
+		-o grafana pkg/cmd/grafana/main.go; \
 	# Build frontend
 	export NODE_OPTIONS="--max-old-space-size=16000"; \
 	yarn install || cat /tmp/*/build.log; \
@@ -128,9 +135,7 @@ RUN set -eux; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/conf/provisioning/datasources"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/conf/provisioning/notifiers"; \
 	install -dm755 "/build/grafana-root/var/lib/grafana/conf/provisioning/plugins"; \
-	install -Dsm755 bin/linux-amd64/grafana "/build/grafana-root/usr/local/bin/grafana"; \
-	install -Dsm755 bin/linux-amd64/grafana-server "/build/grafana-rootr/usr/local/bin/grafana-server"; \
-	install -Dsm755 bin/linux-amd64/grafana-cli "/build/grafana-root/usr/local/bin/grafana-cli"; \
+	install -Dsm755 grafana "/build/grafana-root/usr/local/bin/grafana"; \
 	cp -r public "/build/grafana-root/usr/local/share/grafana"; \
 	cp -r tools "/build/grafana-root/usr/local/share/grafana"; \
 	rm -r "/build/grafana-root/usr/local/share/grafana/public/test"; \
