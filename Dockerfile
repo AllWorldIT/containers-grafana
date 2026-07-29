@@ -22,13 +22,13 @@
 FROM registry.conarx.tech/containers/alpine/edge as builder
 
 
-ENV GRAFANA_VER=13.0.3
+ENV GRAFANA_VER=13.1.1
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
 #ENV GRAFANA_EXTRA_VER=+security-02
 #ENV GRAFANA_EXTRA_DIR=-security-02
 
-COPY --from=registry.conarx.tech/containers/go/edge:1.26.4 /opt/go-1.26.4 /opt/go-1.26.4
+COPY --from=registry.conarx.tech/containers/go/edge:1.26.5 /opt/go-1.26.5 /opt/go-1.26.5
 COPY --from=registry.conarx.tech/containers/nodejs/edge:24.14.1 /opt/nodejs-24.14.1 /opt/nodejs-24.14.1
 
 COPY patches /build/patches
