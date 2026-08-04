@@ -22,7 +22,7 @@
 FROM registry.conarx.tech/containers/alpine/3.22 as builder
 
 
-ENV GRAFANA_VER=13.1.1
+ENV GRAFANA_VER=13.1.2
 ENV GRAFANA_EXTRA_VER=
 ENV GRAFANA_EXTRA_DIR=
 #ENV GRAFANA_EXTRA_VER=+security-02
